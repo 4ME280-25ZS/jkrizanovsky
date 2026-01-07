@@ -1,0 +1,63 @@
+name: Deploy Wishlist-anon to gh-pages/wishlist-anon
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy-wishlist-anon:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare gh-pages branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git show-ref --verify --quiet refs/heads/gh-pages; then
+            git fetch origin gh-pages:gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf . || true
+            git commit --allow-empty -m "Init gh-pages branch"
+            git push origin gh-pages
+            git checkout main
+          fi
+
+      - name: Generate supabase-config.js (from Secrets)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          echo "Generating supabase-config.js if secrets present"
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+            mkdir -p wishlist-anon/public
+            cat > wishlist-anon/public/supabase-config.js <<'EOF'
+// Generated at deploy time from GitHub Secrets. Do NOT commit.
+window.SUPABASE_ENABLED = true;
+window.supabaseClient = supabase.createClient("$SUPABASE_URL", "$SUPABASE_ANON_KEY");
+EOF
+            echo "supabase-config.js generated"
+          else
+            echo "SUPABASE secrets not found — skipping generation"
+          fi
+
+      - name: Copy wishlist-anon public to gh-pages/wishlist-anon
+        run: |
+          git checkout gh-pages
+          mkdir -p wishlist-anon
+          rm -rf wishlist-anon/* || true
+          cp -r wishlist-anon/public/* wishlist-anon/
+          git add wishlist-anon
+          if git diff --staged --quiet; then
+            echo "No changes to deploy"
+          else
+            git commit -m "Deploy wishlist-anon (public) to gh-pages/wishlist-anon"
+            git push origin gh-pages
+          fi
+
+      - name: Done
+        run: echo "Wishlist-anon published to gh-pages/wishlist-anon (if there were changes)"

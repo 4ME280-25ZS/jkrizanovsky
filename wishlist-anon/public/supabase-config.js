@@ -1,0 +1,2 @@
+window.SUPABASE_ENABLED = true;
+window.supabaseClient = supabase.createClient("https://wctmnpnxyhvkagfeozfi.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjdG1ucG54eWh2a2FnZmVvemZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3ODg5NjksImV4cCI6MjA4MzM2NDk2OX0.me_WHg4r8HCJM6r5WvMkI8Q42uUE2d0HkyQU1g_Cw08");
