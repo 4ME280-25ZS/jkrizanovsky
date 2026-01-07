@@ -4,6 +4,17 @@
 
 let SUPABASE_ENABLED = false;
 let supabaseClient = null;
+const SAMPLE_ITEMS = [{ id: 1, title: 'Ukázková položka', visitor_id: 0, visitor_name: 'Ukázkový návštěvník' }];
+
+function enterPreviewMode(){
+  window.__WISHLIST_PREVIEW = true;
+  const banner = document.getElementById('previewBanner');
+  if (banner) banner.classList.remove('hidden');
+  if (registerBtn) registerBtn.disabled = true;
+  if (addBtn) addBtn.disabled = true;
+  if (visitorNameInput) visitorNameInput.disabled = true;
+  if (itemTitleInput) itemTitleInput.disabled = true;
+}
 
 if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY && window.supabase) {
   SUPABASE_ENABLED = true;
@@ -12,12 +23,23 @@ if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY && window.supabase) {
 
 async function api(path, options) {
   if (!SUPABASE_ENABLED) {
-    const res = await fetch(path, options);
-    if (!res.ok) {
-      const err = await res.json().catch(()=>({error:res.statusText}));
-      throw new Error(err.error || res.statusText);
+    // local server mode, but gracefully fallback to preview if server is not reachable
+    try {
+      const res = await fetch(path, options);
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({error:res.statusText}));
+        throw new Error(err.error || res.statusText);
+      }
+      return res.json();
+    } catch (err) {
+      // if this is a GET for items, gracefully show sample data in preview mode
+      if (!options || (options && (!options.method || options.method === 'GET')) && path === '/api/items') {
+        enterPreviewMode();
+        return SAMPLE_ITEMS;
+      }
+      // other operations fail when no backend available
+      throw err;
     }
-    return res.json();
   }
 
   // Supabase-backed implementation
