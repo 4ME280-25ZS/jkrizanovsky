@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wishlist — zapiš své jméno</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="back-link" href="../" aria-label="Zpět">← Zpět</a>
+    <main class="wrap">
+      <header>
+        <h1>Wishlist</h1>
+        <p>Zapiš svoje jméno ke zvolené položce (každý návštěvník může mít najednou právě jednu položku).</p>
+        <div id="banner" class="muted hidden"></div>
+      </header>
+
+      <section class="board">
+        <div class="panel full">
+          <h2>Seznam položek</h2>
+          <ul id="itemsList" class="items"></ul>
+        </div>
+      </section>
+    </main>
+
+    <!-- Supabase client (injected config or local supabase-config.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
