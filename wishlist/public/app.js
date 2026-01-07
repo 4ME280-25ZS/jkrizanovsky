@@ -1,10 +1,66 @@
+// This file supports two backends:
+// 1) local server API (default, same as before)
+// 2) Supabase (if you create `public/supabase-config.js` from `supabase-config.example.js`)
+
+let SUPABASE_ENABLED = false;
+let supabaseClient = null;
+
+if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY && window.supabase) {
+  SUPABASE_ENABLED = true;
+  supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+}
+
 async function api(path, options) {
-  const res = await fetch(path, options);
-  if (!res.ok) {
-    const err = await res.json().catch(()=>({error:res.statusText}));
-    throw new Error(err.error || res.statusText);
+  if (!SUPABASE_ENABLED) {
+    const res = await fetch(path, options);
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({error:res.statusText}));
+      throw new Error(err.error || res.statusText);
+    }
+    return res.json();
   }
-  return res.json();
+
+  // Supabase-backed implementation
+  if (path === '/api/items' && (!options || (options && options.method === 'GET'))) {
+    const { data, error } = await supabaseClient.from('items_view').select('*');
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  if (path === '/api/visitors' && options && options.method === 'POST') {
+    const body = JSON.parse(options.body);
+    const { data, error } = await supabaseClient.from('visitors').insert([{ name: body.name }]).select().single();
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  if (path === '/api/visitors' && (!options || (options && options.method === 'GET'))) {
+    const { data, error } = await supabaseClient.from('visitors').select('*');
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  if (path === '/api/items' && options && options.method === 'POST') {
+    const body = JSON.parse(options.body);
+    const { data, error } = await supabaseClient.from('items').insert([{ title: body.title, visitor_id: body.visitor_id }]).select().single();
+    if (error) throw new Error(error.message);
+    // return item joined with visitor name
+    const { data: itemView, error: viewErr } = await supabaseClient.from('items_view').select('*').eq('id', data.id).single();
+    if (viewErr) throw new Error(viewErr.message);
+    return itemView;
+  }
+
+  if (path.startsWith('/api/items/') && options && options.method === 'DELETE') {
+    // options.body should contain visitor_id
+    const id = Number(path.split('/').pop());
+    const body = JSON.parse(options.body);
+    // delete where id and visitor_id match
+    const { data, error } = await supabaseClient.from('items').delete().match({ id, visitor_id: body.visitor_id }).select().single();
+    if (error) throw new Error(error.message);
+    return { success: true };
+  }
+
+  throw new Error('Unsupported API path for Supabase: ' + path);
 }
 
 const visitorKey = 'wishlist_visitor';
@@ -59,7 +115,7 @@ function renderItems(items){
       btn.addEventListener('click', async ()=>{
         if (!confirm('Opravdu chcete položku odstranit?')) return;
         try {
-          await fetch('/api/items/' + it.id, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ visitor_id: visitor.id }) });
+          await api('/api/items/' + it.id, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ visitor_id: visitor.id }) });
           await loadItems();
           renderState();
         } catch (err) { alert(err.message); }
