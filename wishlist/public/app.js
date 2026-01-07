@@ -96,10 +96,52 @@ const addBtn = document.getElementById('addBtn');
 const yourItem = document.getElementById('yourItem');
 const itemsList = document.getElementById('itemsList');
 
+// Auth & visitor registration
+const authEmailInput = document.getElementById('authEmail');
+const authSendBtn = document.getElementById('authSendBtn');
+const authSignOutBtn = document.getElementById('authSignOutBtn');
+
+let authUser = null;
+
+if (SUPABASE_ENABLED) {
+  // handle magic link sign-in
+  authSendBtn.addEventListener('click', async () => {
+    const email = authEmailInput.value.trim();
+    if (!email) return alert('Zadej e-mail');
+    try {
+      const { error } = await supabaseClient.auth.signInWithOtp({ email });
+      if (error) throw error;
+      alert('Odkaz pro přihlášení byl odeslán na e-mail. Dokonči přihlášení přes mail.');
+    } catch (err) { alert(err.message); }
+  });
+
+  authSignOutBtn.addEventListener('click', async ()=>{
+    await supabaseClient.auth.signOut();
+    authUser = null;
+    renderAuthState();
+  });
+
+  // listen for auth state changes
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    authUser = session?.user ?? null;
+    renderAuthState();
+  });
+}
+
 registerBtn.addEventListener('click', async () => {
   const name = visitorNameInput.value.trim();
   if (!name) return alert('Zadej jméno');
   try {
+    // If Supabase enabled and user is authenticated, create visitor with user_id
+    if (SUPABASE_ENABLED && authUser) {
+      const v = await api('/api/visitors', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name, user_id: authUser.id }) });
+      visitor = v;
+      localStorage.setItem(visitorKey, JSON.stringify(visitor));
+      renderState();
+      return;
+    }
+
+    // Fallback: previous behavior (local server)
     const v = await api('/api/visitors', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) });
     visitor = v;
     localStorage.setItem(visitorKey, JSON.stringify(visitor));
@@ -158,6 +200,16 @@ function renderState(){
   } else {
     addArea.classList.add('hidden');
     yourItem.textContent = 'Nejsi zaregistrován nebo už máš položku.';
+  }
+}
+
+function renderAuthState(){
+  if (!SUPABASE_ENABLED) return;
+  const signedIn = !!authUser;
+  authSendBtn.classList.toggle('hidden', signedIn);
+  authSignOutBtn.classList.toggle('hidden', !signedIn);
+  if (signedIn) {
+    document.getElementById('authEmail').value = authUser.email ?? '';
   }
 }
 

@@ -16,12 +16,20 @@
 
       <section class="board">
         <div class="panel">
-          <h2>Jsi nový návštěvník?</h2>
+          <h2>Autentizace (Supabase)</h2>
+          <div class="field">
+            <input id="authEmail" placeholder="Zadej e-mail pro magic link" />
+            <button id="authSendBtn">Poslat odkaz</button>
+            <button id="authSignOutBtn" class="hidden">Odhlásit</button>
+          </div>
+          <p class="muted">Přihlášení zajistí, že tvé položky budeš moci spravovat bezpečně (použitelné se Supabase).</p>
+          <hr />
+          <h3>Registrovat návštěvníka</h3>
           <div class="field">
             <input id="visitorName" placeholder="Zadej své jméno" />
             <button id="registerBtn">Registrovat</button>
           </div>
-          <p class="muted">Tvé jméno se uloží lokálně a budou s ním spojeny tvé položky.</p>
+          <p class="muted">Pokud jsi přihlášen, registrace vytvoří návštěvníka spojeného s tvým účtem.</p>
         </div>
 
         <div class="panel">
