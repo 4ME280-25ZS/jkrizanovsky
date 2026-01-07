@@ -34,13 +34,18 @@ GitHub Pages & preview mode
 
 - A preview mode is built into the frontend: if no backend (local server or Supabase) responds when loading items, the page will show a small banner and example items so you can inspect the UI without any database.
 
-Using Supabase (optional)
+Using the server and preview mode
 
-1. Create a new project at https://app.supabase.com.
-2. Open the SQL editor and run `wishlist/supabase.sql` from this repo to create the schema and `items_view`.
-3. Copy `wishlist/public/supabase-config.example.js` to `wishlist/public/supabase-config.js` and fill in your `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
-   - Note: public anon key is used by the frontend in this demo. For production, enable Row Level Security and add appropriate policies.
-4. After adding `supabase-config.js` (it's ignored by `.gitignore`), the frontend will use Supabase directly for listing/creating/deleting items.
+- The wishlist works with a local Node.js server (Express + SQLite). Run it with:
+
+  npm install
+  npm start
+
+  and open http://localhost:3000
+
+- If the server is not available, the frontend shows a preview banner and sample data so you can inspect the UI without a database.
+
+- (Optional) You may later integrate an external DB or Supabase if desired, but authentication is not included in the default setup.
 
 Deploy wishlist only (optional)
 

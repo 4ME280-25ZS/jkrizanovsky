@@ -16,20 +16,12 @@
 
       <section class="board">
         <div class="panel">
-          <h2>Autentizace (Supabase)</h2>
-          <div class="field">
-            <input id="authEmail" placeholder="Zadej e-mail pro magic link" />
-            <button id="authSendBtn">Poslat odkaz</button>
-            <button id="authSignOutBtn" class="hidden">Odhlásit</button>
-          </div>
-          <p class="muted">Přihlášení zajistí, že tvé položky budeš moci spravovat bezpečně (použitelné se Supabase).</p>
-          <hr />
-          <h3>Registrovat návštěvníka</h3>
+          <h2>Jsi nový návštěvník?</h2>
           <div class="field">
             <input id="visitorName" placeholder="Zadej své jméno" />
             <button id="registerBtn">Registrovat</button>
           </div>
-          <p class="muted">Pokud jsi přihlášen, registrace vytvoří návštěvníka spojeného s tvým účtem.</p>
+          <p class="muted">Tvé jméno se uloží lokálně a budou s ním spojeny tvé položky.</p>
         </div>
 
         <div class="panel">
@@ -49,9 +41,6 @@
 
     </main>
 
-    <!-- Optional Supabase client: create supabase-config.js from supabase-config.example.js with your project details -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
-    <script src="supabase-config.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
