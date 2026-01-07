@@ -49,75 +49,45 @@ const addBtn = document.getElementById('addBtn');
 const yourItem = document.getElementById('yourItem');
 const itemsList = document.getElementById('itemsList');
 
-// Auth & visitor registration
-const authEmailInput = document.getElementById('authEmail');
-const authSendBtn = document.getElementById('authSendBtn');
-const authSignOutBtn = document.getElementById('authSignOutBtn');
+// --- Remove registration flow; implement per-item assignment using Supabase when enabled ---
 
-let authUser = null;
-
-if (SUPABASE_ENABLED) {
-  // handle magic link sign-in
-  authSendBtn.addEventListener('click', async () => {
-    const email = authEmailInput.value.trim();
-    if (!email) return alert('Zadej e-mail');
-    try {
-      const { error } = await supabaseClient.auth.signInWithOtp({ email });
-      if (error) throw error;
-      alert('Odkaz pro přihlášení byl odeslán na e-mail. Dokonči přihlášení přes mail.');
-    } catch (err) { alert(err.message); }
-  });
-
-  authSignOutBtn.addEventListener('click', async ()=>{
-    await supabaseClient.auth.signOut();
-    authUser = null;
-    renderAuthState();
-  });
-
-  // listen for auth state changes
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    authUser = session?.user ?? null;
-    renderAuthState();
-  });
-}
-
-registerBtn.addEventListener('click', async () => {
-  const name = visitorNameInput.value.trim();
-  if (!name) return alert('Zadej jméno');
-  try {
-    // If Supabase enabled and user is authenticated, create visitor with user_id
-    if (SUPABASE_ENABLED && authUser) {
-      const v = await api('/api/visitors', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name, user_id: authUser.id }) });
-      visitor = v;
-      localStorage.setItem(visitorKey, JSON.stringify(visitor));
-      renderState();
-      return;
-    }
-
-    // Fallback: previous behavior (local server)
-    const v = await api('/api/visitors', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) });
-    visitor = v;
-    localStorage.setItem(visitorKey, JSON.stringify(visitor));
-    renderState();
-  } catch (err) { alert(err.message); }
-});
-
-addBtn.addEventListener('click', async () => {
-  const title = itemTitleInput.value.trim();
-  if (!title) return alert('Napiš položku');
-  try {
-    await api('/api/items', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ title, visitor_id: visitor.id }) });
-    itemTitleInput.value = '';
-    await loadItems();
-    renderState();
-  } catch (err) { alert(err.message); }
-});
+const PRESET_TITLES = [
+  'Lamborghini',
+  'Ferrari',
+  'Head & Shoulders sprcháč',
+  'angličák traktoru',
+  'zlatý pohár',
+  'příbory'
+];
 
 async function loadItems(){
   try {
+    if (SUPABASE_ENABLED) {
+      // ensure seed items exist
+      const { data: existing, error: e1 } = await supabaseClient.from('items').select('id,title');
+      if (e1) throw e1;
+      const existingTitles = new Set((existing||[]).map(r=>r.title));
+      const toInsert = PRESET_TITLES.filter(t=>!existingTitles.has(t)).map(t=>({ title: t }));
+      if (toInsert.length) {
+        const { error: insErr } = await supabaseClient.from('items').insert(toInsert);
+        if (insErr) console.warn('Seed insert error:', insErr.message || insErr);
+      }
+      // read items with visitor names via view
+      const { data, error } = await supabaseClient.from('items_view').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      renderItems(data || []);
+      return;
+    }
+
+    // fallback: local server
     const items = await api('/api/items');
     renderItems(items);
-  } catch (err) { console.error(err); }
+  } catch (err) {
+    console.error(err);
+    // show preview sample items
+    enterPreviewMode();
+    renderItems(SAMPLE_ITEMS.concat(PRESET_TITLES.filter(t=>!SAMPLE_ITEMS.find(s=>s.title===t)).map((t,i)=>({ id: 100+i, title: t, visitor_id: 0, visitor_name: null }))));
+  }
 }
 
 function renderItems(items){
@@ -125,47 +95,47 @@ function renderItems(items){
   if (!items.length) itemsList.innerHTML = '<li class="muted">Zatím žádné položky</li>';
   items.forEach(it => {
     const li = document.createElement('li');
-    li.innerHTML = `<div><strong>${escapeHtml(it.title)}</strong><div class="meta">od ${escapeHtml(it.visitor_name)}</div></div>`;
-    if (visitor && visitor.id === it.visitor_id) {
+    const assigned = it.visitor_name && it.visitor_name.trim();
+    const titleHtml = `<div><strong>${escapeHtml(it.title)}</strong>` + (assigned?`<div class="meta">od ${escapeHtml(it.visitor_name)}</div>`:'') + '</div>';
+
+    li.innerHTML = titleHtml;
+
+    if (!assigned) {
+      const input = document.createElement('input');
+      input.placeholder = 'Zadej své jméno';
+      input.style.marginRight = '.6rem';
       const btn = document.createElement('button');
-      btn.textContent = 'Odebrat';
+      btn.textContent = 'Potvrdit';
       btn.addEventListener('click', async ()=>{
-        if (!confirm('Opravdu chcete položku odstranit?')) return;
+        const name = (input.value || '').trim();
+        if (!name) return alert('Napiš jméno');
         try {
-          await api('/api/items/' + it.id, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ visitor_id: visitor.id }) });
+          if (SUPABASE_ENABLED) {
+            // create visitor and assign
+            const { data: v, error: e1 } = await supabaseClient.from('visitors').insert({ name }).select().single();
+            if (e1) throw e1;
+            const { data: updated, error: e2 } = await supabaseClient.from('items').update({ visitor_id: v.id }).eq('id', it.id).select().single();
+            if (e2) throw e2;
+            await loadItems();
+            return;
+          }
+
+          // fallback: call local API (server must implement assignment route)
+          await api(`/api/items/${it.id}/assign`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
           await loadItems();
-          renderState();
-        } catch (err) { alert(err.message); }
+        } catch (err) { alert(err.message || err); }
       });
-      li.appendChild(btn);
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'flex';
+      wrapper.style.gap = '.6rem';
+      wrapper.appendChild(input);
+      wrapper.appendChild(btn);
+      li.appendChild(wrapper);
     }
+
     itemsList.appendChild(li);
   });
 }
-
-function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]); }
-
-function renderState(){
-  if (visitor) {
-    document.getElementById('visitorName').value = visitor.name;
-    addArea.classList.toggle('hidden', false);
-    yourItem.textContent = 'Registrován jako ' + visitor.name;
-  } else {
-    addArea.classList.add('hidden');
-    yourItem.textContent = 'Nejsi zaregistrován nebo už máš položku.';
-  }
-}
-
-function renderAuthState(){
-  if (!SUPABASE_ENABLED) return;
-  const signedIn = !!authUser;
-  authSendBtn.classList.toggle('hidden', signedIn);
-  authSignOutBtn.classList.toggle('hidden', !signedIn);
-  if (signedIn) {
-    document.getElementById('authEmail').value = authUser.email ?? '';
-  }
-}
-
 (async function init(){
   await loadItems();
   renderState();

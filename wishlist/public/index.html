@@ -11,29 +11,11 @@
     <a class="back-link" href="../../" aria-label="Zpět">← Zpět</a>
       <header>
         <h1>Wishlist</h1>
-        <p>Zapiš jednu položku, kterou si přeješ. Každý návštěvník může mít právě jednu položku.</p>
+        <p>Zapiš jméno u kterékoliv položky níže — pokud zadáš text a potvrdíš, jméno bude uloženo do databáze a přiřazeno k položce.</p>
         <div id="previewBanner" class="muted hidden">Preview mode: DB not connected — zobrazeny ukázkové data.</div>
       </header>
 
       <section class="board">
-        <div class="panel">
-          <h2>Jsi nový návštěvník?</h2>
-          <div class="field">
-            <input id="visitorName" placeholder="Zadej své jméno" />
-            <button id="registerBtn">Registrovat</button>
-          </div>
-          <p class="muted">Tvé jméno se uloží lokálně a budou s ním spojeny tvé položky.</p>
-        </div>
-
-        <div class="panel">
-          <h2>Tvoje položka</h2>
-          <div id="addArea" class="field hidden">
-            <input id="itemTitle" placeholder="Napiš název položky" />
-            <button id="addBtn">Přidat</button>
-          </div>
-          <div id="yourItem" class="muted">Nejsi zaregistrován nebo už máš položku.</div>
-        </div>
-
         <div class="panel full">
           <h2>Seznam položek</h2>
           <ul id="itemsList" class="items"></ul>

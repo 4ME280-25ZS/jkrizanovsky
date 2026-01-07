@@ -57,7 +57,12 @@ How it works:
 - The `deploy-wishlist` workflow will generate `wishlist/public/supabase-config.js` during deployment from these secrets and enable the demo.
 - Locally, copy `wishlist/public/supabase-config.example.js` to `wishlist/public/supabase-config.js` and fill in your values for testing (do NOT commit this file).
 
-Security note: The ANON key is public-facing; for production workloads use a server-side integration with the Service Role key and RLS policies.
+Behavior:
+- On first load (when Supabase is enabled), the frontend will ensure the following items exist in the database and will seed them if missing:
+  - Lamborghini, Ferrari, Head & Shoulders sprcháč, angličák traktoru, zlatý pohár, příbory
+- Each item is shown with an input and a **Potvrdit** button (if it has no assigned name). Enter a name and Confirm — the name is inserted into `visitors` and linked to the item in `items`.
+
+Security note: The ANON key is public-facing; for production workloads use a server-side integration with the Service Role key and RLS policies. For robust production workflows, avoid client-side writes using ANON key.
 
 Deploy wishlist only (optional)
 
