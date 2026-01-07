@@ -22,6 +22,10 @@ body{display:grid;place-items:center;background:linear-gradient(180deg,#fff,#f7f
 /* content wrapper to control text alignment relative to avatar */
 .content{flex:1;text-align:center}
 
+/* back link inside card */
+.back-link{align-self:flex-start;text-decoration:none;color:var(--muted);font-weight:600;margin-bottom:.25rem}
+.back-link:hover{color:var(--fg)}
+
 @media(min-width:520px){
   .card{max-width:520px}
   /* keep column layout on larger screens so info stacks vertically */
