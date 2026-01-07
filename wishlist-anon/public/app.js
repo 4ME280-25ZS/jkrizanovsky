@@ -32,7 +32,7 @@ async function loadItems(){
 
 // 8-bit style icons mapping
 const itemIcons = {
-  'Lamborghini': '�',
+  'Lamborghini': '🐂',
   'Ferrari': '🏎️',
   'Head & Shoulders sprcháč': '🧴',
   'angličák traktoru': '🔧',
