@@ -30,12 +30,27 @@ async function loadItems(){
   renderItems(data || []);
 }
 
+// 8-bit style icons mapping
+const itemIcons = {
+  'Lamborghini': '🏎️',
+  'Ferrari': '🏁',
+  'Head & Shoulders sprcháč': '🧴',
+  'angličák traktoru': '🔧',
+  'zlatý pohár': '🏆',
+  'příbory': '🍴'
+};
+
 function renderItems(items){
   itemsList.innerHTML = '';
   if (!items.length) { itemsList.innerHTML = '<li class="muted">Žádné položky</li>'; return; }
   items.forEach(it => {
     const li = document.createElement('li');
     li.className = 'item-card';
+
+    const icon = document.createElement('div');
+    icon.className = 'icon';
+    icon.textContent = itemIcons[it.title] || '📦';
+    li.appendChild(icon);
 
     const titleDiv = document.createElement('div');
     titleDiv.className = 'title';
