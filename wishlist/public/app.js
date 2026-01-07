@@ -1,6 +1,15 @@
 // API wrapper: uses local server; if server is not reachable, items GET returns sample data for preview
 const SAMPLE_ITEMS = [{ id: 1, title: 'Ukázková položka', visitor_id: 0, visitor_name: 'Ukázkový návštěvník' }];
 
+// Supabase client demo toggles
+// A generated `supabase-config.js` (produced by CI) should set `window.SUPABASE_ENABLED = true`
+// and create `window.supabaseClient`. Ensure these globals exist to avoid runtime errors.
+if (typeof SUPABASE_ENABLED === 'undefined') var SUPABASE_ENABLED = false;
+if (SUPABASE_ENABLED && typeof supabaseClient === 'undefined') {
+  console.warn('SUPABASE_ENABLED is true but supabaseClient not found — disabling Supabase features.');
+  SUPABASE_ENABLED = false;
+}
+
 function enterPreviewMode(){
   window.__WISHLIST_PREVIEW = true;
   const banner = document.getElementById('previewBanner');

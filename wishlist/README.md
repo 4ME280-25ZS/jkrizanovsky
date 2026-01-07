@@ -47,6 +47,18 @@ Using the server and preview mode
 
 - (Optional) You may later integrate an external DB or Supabase if desired, but authentication is not included in the default setup.
 
+Client-only Supabase demo
+-------------------------
+
+The project supports an optional client-only Supabase demo. In this mode the frontend uses your Supabase project directly with the ANON key (suitable for demos only).
+
+How it works:
+- Add these repo **Secrets** in GitHub: `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+- The `deploy-wishlist` workflow will generate `wishlist/public/supabase-config.js` during deployment from these secrets and enable the demo.
+- Locally, copy `wishlist/public/supabase-config.example.js` to `wishlist/public/supabase-config.js` and fill in your values for testing (do NOT commit this file).
+
+Security note: The ANON key is public-facing; for production workloads use a server-side integration with the Service Role key and RLS policies.
+
 Deploy wishlist only (optional)
 
 - If you prefer to publish **only** the static `wishlist/public` into a dedicated `gh-pages` subfolder, there's an optional workflow ` .github/workflows/deploy-wishlist.yml` that copies `wishlist/public` into `gh-pages` under `wishlist/` so the page is available at the same URL above. See the workflow file and enable Actions if you want this automatic behavior.
