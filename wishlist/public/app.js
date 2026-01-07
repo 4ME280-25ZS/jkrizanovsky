@@ -11,13 +11,16 @@ if (SUPABASE_ENABLED && typeof supabaseClient === 'undefined') {
 }
 
 function enterPreviewMode(){
+  // Don't show preview mode when Supabase is enabled — we want a fully connected experience
+  if (SUPABASE_ENABLED) return;
   window.__WISHLIST_PREVIEW = true;
   const banner = document.getElementById('previewBanner');
   if (banner) banner.classList.remove('hidden');
-  if (registerBtn) registerBtn.disabled = true;
-  if (addBtn) addBtn.disabled = true;
-  if (visitorNameInput) visitorNameInput.disabled = true;
-  if (itemTitleInput) itemTitleInput.disabled = true;
+  // disable legacy registration inputs if present
+  if (typeof registerBtn !== 'undefined' && registerBtn) registerBtn.disabled = true;
+  if (typeof addBtn !== 'undefined' && addBtn) addBtn.disabled = true;
+  if (typeof visitorNameInput !== 'undefined' && visitorNameInput) visitorNameInput.disabled = true;
+  if (typeof itemTitleInput !== 'undefined' && itemTitleInput) itemTitleInput.disabled = true;
 }
 
 async function api(path, options) {
@@ -29,10 +32,13 @@ async function api(path, options) {
     }
     return res.json();
   } catch (err) {
-    // if this is a GET for items, gracefully show sample data in preview mode
+    // if this is a GET for items, gracefully show sample data in preview mode ONLY when Supabase is not enabled
     if (!options || (options && (!options.method || options.method === 'GET')) && path === '/api/items') {
-      enterPreviewMode();
-      return SAMPLE_ITEMS;
+      if (!SUPABASE_ENABLED) {
+        enterPreviewMode();
+        return SAMPLE_ITEMS;
+      }
+      // When Supabase is enabled, surface the error instead of silently falling back to preview
     }
     throw err;
   }
@@ -84,6 +90,15 @@ async function loadItems(){
     renderItems(items);
   } catch (err) {
     console.error(err);
+    if (SUPABASE_ENABLED) {
+      const banner = document.getElementById('previewBanner');
+      if (banner) {
+        banner.classList.remove('hidden');
+        banner.textContent = 'Chyba připojení k databázi: ' + (err.message || err);
+      }
+      itemsList.innerHTML = '<li class="muted">Chyba při připojení k databázi — zkontrolujte Supabase secrets a síť.</li>';
+      return;
+    }
     // show preview sample items
     enterPreviewMode();
     renderItems(SAMPLE_ITEMS.concat(PRESET_TITLES.filter(t=>!SAMPLE_ITEMS.find(s=>s.title===t)).map((t,i)=>({ id: 100+i, title: t, visitor_id: 0, visitor_name: null }))));
