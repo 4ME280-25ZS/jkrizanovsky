@@ -1,25 +1,5 @@
-const path = require('path');
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const db = require('./db');
+// REMOVED: wishlist server has been removed from the repository.
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
-// API
-app.get('/api/items', async (req, res) => {
-  try {
-    const items = await db.getItems();
-    res.json(items);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 app.get('/api/visitors', async (req, res) => {
   try {

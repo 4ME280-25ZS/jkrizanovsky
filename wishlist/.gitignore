@@ -1,4 +1,3 @@
 node_modules/
 wishlist.db
 .env
-public/supabase-config.js
