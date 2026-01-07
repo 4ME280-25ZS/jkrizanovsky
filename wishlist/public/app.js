@@ -92,18 +92,27 @@ async function loadItems(){
 
 function renderItems(items){
   itemsList.innerHTML = '';
-  if (!items.length) itemsList.innerHTML = '<li class="muted">Zatím žádné položky</li>';
+  if (!items.length) { itemsList.innerHTML = '<li class="muted">Zatím žádné položky</li>'; return; }
   items.forEach(it => {
     const li = document.createElement('li');
+    li.className = 'item-card';
+
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'title';
+    titleDiv.innerHTML = `<strong>${escapeHtml(it.title)}</strong>`;
+    li.appendChild(titleDiv);
+
     const assigned = it.visitor_name && it.visitor_name.trim();
-    const titleHtml = `<div><strong>${escapeHtml(it.title)}</strong>` + (assigned?`<div class="meta">od ${escapeHtml(it.visitor_name)}</div>`:'') + '</div>';
-
-    li.innerHTML = titleHtml;
-
-    if (!assigned) {
+    if (assigned) {
+      const meta = document.createElement('div');
+      meta.className = 'meta assigned';
+      meta.textContent = 'od ' + it.visitor_name;
+      li.appendChild(meta);
+    } else {
+      const controls = document.createElement('div');
+      controls.className = 'controls';
       const input = document.createElement('input');
       input.placeholder = 'Zadej své jméno';
-      input.style.marginRight = '.6rem';
       const btn = document.createElement('button');
       btn.textContent = 'Potvrdit';
       btn.addEventListener('click', async ()=>{
@@ -125,12 +134,9 @@ function renderItems(items){
           await loadItems();
         } catch (err) { alert(err.message || err); }
       });
-      const wrapper = document.createElement('div');
-      wrapper.style.display = 'flex';
-      wrapper.style.gap = '.6rem';
-      wrapper.appendChild(input);
-      wrapper.appendChild(btn);
-      li.appendChild(wrapper);
+      controls.appendChild(input);
+      controls.appendChild(btn);
+      li.appendChild(controls);
     }
 
     itemsList.appendChild(li);
