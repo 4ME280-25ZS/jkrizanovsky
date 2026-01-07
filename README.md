@@ -50,3 +50,9 @@ Možnosti:
 ---
 
 Pokud chcete, můžu za vás přidat automatické nasazení pomocí GitHub Actions a pomoci s nastavením GitHub Pages — dejte vědět, jestli chcete, abych to přidal do tohoto repozitáře.
+
+---
+
+## Wishlist (nový subprojekt)
+
+Vytvořil jsem nový subprojekt `wishlist/` — jednoduchou aplikaci (Express + SQLite) kde se návštěvníci mohou zaregistrovat a zapsat **jednu** položku do seznamu. Data jsou uložena v `wishlist/wishlist.db`. V návodu v `wishlist/README.md` jsou instrukce jak spustit lokálně.
